@@ -1,0 +1,79 @@
+from datetime import datetime
+import socket
+import base64
+import mimetypes
+def send_email(host,port,sender,password, recipient_str,subject,message, attachment_path=None):
+    recipients=recipient_str.split(' ')
+    datenow=datetime.now()
+
+    sock=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.connect((host,port))
+
+    ehlo_command = f"EHLO {host}\r\n"
+    sock.sendall(ehlo_command.encode('utf-8'))
+    response = sock.recv(1024)
+    print(response.decode('utf-8'))
+
+    # sock.sendall('AUTH LOGIN'.encode('utf-8') + b'\r\n')
+    # response = sock.recv(1024)
+    # sock.sendall(sender.encode('utf-8') + b"\r\n")
+    # response = sock.recv(1024)
+    # sock.sendall(password.encode('utf-8')+b'\r\n')
+    # response = sock.recv(1024)
+
+    sock.sendall(b"MAIL FROM: <" + sender.encode('utf-8') + b">\r\n")
+    response = sock.recv(1024)
+    # To vs CC
+    for recipient in recipients:
+        sock.sendall(b"RCPT TO: <"+ recipient.encode('utf-8')+b">\r\n")
+        response = sock.recv(1024)
+        print(recipient+" ")
+    #DATA
+    sock.sendall("DATA".encode('utf-8') + b'\r\n')
+    response = sock.recv(1024)
+    sock.sendall(b"Date: " + datenow.strftime("%Y-%m-%d %H:%M:%S").encode('utf-8') + b"\r\n")
+    sock.sendall(b"From: <" + sender.encode('utf-8') + b">\r\n")
+    sock.sendall(b"Subject: " + subject.encode('utf-8') + b"\r\n")
+    sock.sendall(message.encode('utf-8') + b"\r\n")
+    if attachment_path is not None:
+        with open(attachment_path, 'rb') as file:
+            attachment_content = file.read()
+
+        encoded_attachment = base64.b64encode(attachment_content)
+
+        # Xác định loại MIME của tệp
+        content_type, _ = mimetypes.guess_type(attachment_path)
+        if content_type is None:
+            content_type = 'application/octet-stream'
+
+        # Lấy tên tệp từ đường dẫn
+        filename = attachment_path.split('/')[-1]  # Thay thế bằng hàm phù hợp cho định dạng đường dẫn của bạn
+
+        # Tạo header cho attachment theo chuẩn MIME
+        attachment_header = (
+            f"Content-Type: {content_type}\r\n"
+            f"Content-Disposition: attachment; filename=\"{filename}\"\r\n"
+            f"Content-Transfer-Encoding: base64\r\n\r\n"
+        )
+
+        # Gửi header và dữ liệu attachment qua socket
+        sock.sendall(attachment_header.encode('utf-8'))
+        sock.sendall(encoded_attachment)
+    response = sock.recv(1024)
+    sock.sendall(b"\r\n.\r\n")
+    response = sock.recv(1024)
+    sock.sendall(b"QUIT\r\n")
+    sock.close()
+
+def main():
+     sender = "thanhvinh@gmail.com"
+     #recipient_str=input("To: ")
+     recipient_str = "test@gmail.com"
+     #subject=input("Subject: ")
+     subject="Text"
+     #message=input("Message: ")
+     message="Text"
+     attachment_path = "./Text.txt"
+     send_email("127.0.0.1",2225,sender,'123', recipient_str,subject,message, attachment_path)
+if __name__ == "__main__":
+    main()
