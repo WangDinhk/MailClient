@@ -6,13 +6,13 @@ from email.mime.base import MIMEBase
 from email import encoders
 import os
 
-def send_email(host, port, sender, password, recipient_str, subject, message, attachment_path) :
+def send_email(host, port, sender, password, recipient_str, subject, message, attachment_path, type_send = 'To') :
     recipients = recipient_str.split(' ')
 
     # Tạo đối tượng MIMEMultipart
     msg = MIMEMultipart()
     msg['From'] = sender
-    msg['To'] = recipient_str
+    msg[type_send] = recipient_str
     msg['Subject'] = subject
 
     # Thêm nội dung email
@@ -69,11 +69,12 @@ def send_email(host, port, sender, password, recipient_str, subject, message, at
 
         sock.sendall(b"QUIT\r\n")
 def cc_send_email(host, port, sender, password, cc_str, subject, message, attachment_path):
-    send_email(host, port, sender, password, cc_str, subject, message, attachment_path)
+    send_email(host, port, sender, password, cc_str, subject, message, attachment_path, 'Cc')
+    
 def bcc_send_email(host, port, sender, password, bcc_str, subject, message, attachment_path):
     bcc_list = bcc_str.split(' ')
     for bcc in bcc_list:
-        send_email(host, port, sender, password, bcc, subject, message, attachment_path)
+        send_email(host, port, sender, password, bcc, subject, message, attachment_path, 'Bcc')
 #pop
 def fetch_emails(host, port, username, password):
     # Kết nối đến server POP3
@@ -113,11 +114,29 @@ if __name__ == "__main__":
     bcc_str = input("BCC: ")
     subject = input('Subject: ')
     message = input("Message: ")
-    attachment_path = "./Text.txt"  # Thay đổi đường dẫn tệp đính kèm của bạn
+    attachment_path = "./Text.rar"  # Thay đổi đường dẫn tệp đính kèm của bạn
     send_email("127.0.0.1", 2225, sender, 'your_password', recipient_str, subject, message, attachment_path)
     if cc_str:
         cc_send_email("127.0.0.1", 2225, sender, 'your_password', cc_str, subject, message, attachment_path)
     if bcc_str:
         bcc_send_email("127.0.0.1", 2225, sender, 'your_password', bcc_str, subject, message, attachment_path)
+    #Menu
+    # while True:
+    #     print('Menu')
+    #     print('1.Send Mail')
+    #     print('2.Inbox')
+    #     print('3.Exit')
+    #     a = input('Choose: ')
+    #     if a == 1:{
+
+    #     }
+
+    #     if a == 2:{
+
+    #     }
+
+    #     if a == 3:
+    #         break
+
 
 
